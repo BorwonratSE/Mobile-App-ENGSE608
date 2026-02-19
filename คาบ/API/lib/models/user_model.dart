@@ -1,13 +1,8 @@
-// ===== enum =====
-enum UserRole { admin, user }
-
-// ===== UserModel =====
 class UserModel {
   final int? id;
   final String email;
   final String username;
   final String password;
-  final UserRole role;
   final NameModel name;
   final AddressModel address;
   final String phone;
@@ -17,26 +12,20 @@ class UserModel {
     required this.email,
     required this.username,
     required this.password,
-    required this.role,
     required this.name,
     required this.address,
     required this.phone,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
-    final username = json['username'] ?? '';
-
     return UserModel(
       id: json['id'],
       email: json['email'] ?? '',
-      username: username,
+      username: json['username'] ?? '',
       password: json['password'] ?? '',
-      phone: json['phone'] ?? '',
-      role: username == 'admin'
-          ? UserRole.admin
-          : UserRole.user,
       name: NameModel.fromJson(json['name'] ?? {}),
       address: AddressModel.fromJson(json['address'] ?? {}),
+      phone: json['phone'] ?? '',
     );
   }
 
@@ -46,22 +35,18 @@ class UserModel {
       'email': email,
       'username': username,
       'password': password,
-      'phone': phone,
       'name': name.toJson(),
       'address': address.toJson(),
+      'phone': phone,
     };
   }
 }
 
-// ===== NameModel =====
 class NameModel {
   final String firstname;
   final String lastname;
 
-  NameModel({
-    required this.firstname,
-    required this.lastname,
-  });
+  NameModel({required this.firstname, required this.lastname});
 
   factory NameModel.fromJson(Map<String, dynamic> json) {
     return NameModel(
@@ -76,7 +61,6 @@ class NameModel {
       };
 }
 
-// ===== AddressModel =====
 class AddressModel {
   final String city;
   final String street;
@@ -114,15 +98,11 @@ class AddressModel {
       };
 }
 
-// ===== GeoLocationModel =====
 class GeoLocationModel {
   final String lat;
   final String long;
 
-  GeoLocationModel({
-    required this.lat,
-    required this.long,
-  });
+  GeoLocationModel({required this.lat, required this.long});
 
   factory GeoLocationModel.fromJson(Map<String, dynamic> json) {
     return GeoLocationModel(

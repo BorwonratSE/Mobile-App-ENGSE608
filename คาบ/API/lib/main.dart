@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'providers/user_provider.dart';
-import 'providers/auth_provider.dart';
+import 'providers/product_provider.dart';
 import 'screens/login_screen.dart';
-import 'screens/user_list_screen.dart';
 
 void main() {
   runApp(const MyApp());
@@ -17,25 +16,12 @@ class MyApp extends StatelessWidget {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => UserProvider()),
-        ChangeNotifierProvider(create: (_) => AuthProvider()),
+        ChangeNotifierProvider(create: (_) => ProductProvider()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
-        home: const RootScreen(),
+        home: const LoginScreen(),
       ),
     );
-  }
-}
-
-class RootScreen extends StatelessWidget {
-  const RootScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    final auth = context.watch<AuthProvider>();
-
-    return auth.isLoggedIn
-        ? const UserListScreen()
-        : const LoginScreen();
   }
 }

@@ -1,17 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../providers/user_provider.dart';
-import '../providers/auth_provider.dart';
-import '../models/user_model.dart';
-import 'user_form_screen.dart';
-import 'login_screen.dart';
 
 class UserListScreen extends StatefulWidget {
   const UserListScreen({super.key});
 
   @override
-  State<UserListScreen> createState() => _UserListScreenState();
+  State<UserListScreen> createState() =>
+      _UserListScreenState();
 }
 
 class _UserListScreenState extends State<UserListScreen> {
@@ -25,92 +21,37 @@ class _UserListScreenState extends State<UserListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final userProvider = context.watch<UserProvider>();
-    final auth = context.watch<AuthProvider>();
-
-    final isAdmin =
-        auth.currentUser != null &&
-        auth.currentUser!.role == UserRole.admin;
+    final p = context.watch<UserProvider>();
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Users'),
-        actions: [
-          // 🚪 Logout
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
-              context.read<AuthProvider>().logout();
+  title: const Text('Users'),
+  actions: [
+    IconButton(
+      icon: const Icon(Icons.logout),
+      onPressed: () {
+        context.read<UserProvider>().logout();
+        Navigator.pushReplacementNamed(context, '/login');
+      },
+    ),
+  ],
+),
 
-              Navigator.pushAndRemoveUntil(
-                context,
-                MaterialPageRoute(builder: (_) => const LoginScreen()),
-                (_) => false,
-              );
-            },
-          ),
-        ],
-      ),
-
-      // ➕ เพิ่ม user (admin เท่านั้น)
-      floatingActionButton: isAdmin
-          ? FloatingActionButton(
-              child: const Icon(Icons.add),
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const UserFormScreen(),
-                  ),
-                );
-              },
-            )
-          : null,
-
-      body: userProvider.isLoading
+      body: p.isLoading
           ? const Center(child: CircularProgressIndicator())
           : ListView.builder(
-              itemCount: userProvider.users.length,
+              itemCount: p.users.length,
               itemBuilder: (_, i) {
-                final u = userProvider.users[i];
-
+                final u = p.users[i];
                 return ListTile(
                   title: Text(
-                    '${u.name.firstname} ${u.name.lastname}',
+                      '${u.name.firstname} ${u.name.lastname}'),
+                  subtitle: Text(u.email),
+                  trailing: IconButton(
+                    icon: const Icon(Icons.delete),
+                    onPressed: () =>
+                        p.removeUser(u.id!),
                   ),
-                  subtitle: Text(
-                    '${u.email} (${u.role.name})',
-                  ),
-
-                  // 🗑 ลบ user (admin เท่านั้น)
-                  trailing: isAdmin
-                      ? Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            // ✏️ แก้ไข
-                            IconButton(
-                              icon: const Icon(Icons.edit),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) =>
-                                        UserFormScreen(editUser: u),
-                                  ),
-                                );
-                              },
-                            ),
-
-                            // 🗑 ลบ
-                            IconButton(
-                              icon: const Icon(Icons.delete),
-                              onPressed: () {
-                                userProvider.removeUser(u.id ?? 0);
-                              },
-                            ),
-                          ],
-                        )
-                      : null,
                 );
               },
             ),

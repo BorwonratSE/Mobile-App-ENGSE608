@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import '../providers/user_provider.dart';
-import '../providers/auth_provider.dart';
-import 'user_form_screen.dart';
+import 'product_list_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,135 +11,74 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController usernameCtrl = TextEditingController();
-  final TextEditingController passwordCtrl = TextEditingController();
-
-  String? error;
-
-  @override
-  void initState() {
-    super.initState();
-    Future.microtask(() {
-      context.read<UserProvider>().loadUsers();
-    });
-  }
-
-  @override
-  void dispose() {
-    usernameCtrl.dispose();
-    passwordCtrl.dispose();
-    super.dispose();
-  }
+  final _formKey = GlobalKey<FormState>();
+  final userCtrl = TextEditingController();
+  final passCtrl = TextEditingController();
 
   @override
   Widget build(BuildContext context) {
-    final userProvider = context.watch<UserProvider>();
-    final authProvider = context.read<AuthProvider>();
+    final provider = context.watch<UserProvider>();
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Login'),
-        centerTitle: true,
-      ),
+      appBar: AppBar(title: const Text('Login')),
       body: Padding(
         padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            const SizedBox(height: 20),
-
-            const Text(
-              'เข้าสู่ระบบ',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+        child: Form(
+          key: _formKey,
+          child: Column(
+            children: [
+              TextFormField(
+                controller: userCtrl,
+                decoration: const InputDecoration(labelText: 'Username'),
+                validator: (v) => v!.isEmpty ? 'Required' : null,
               ),
-            ),
-
-            const SizedBox(height: 24),
-
-            TextField(
-              controller: usernameCtrl,
-              decoration: const InputDecoration(
-                labelText: 'Username',
-                border: OutlineInputBorder(),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: passCtrl,
+                obscureText: true,
+                decoration: const InputDecoration(labelText: 'Password'),
+                validator: (v) => v!.isEmpty ? 'Required' : null,
               ),
-            ),
-            const SizedBox(height: 12),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  onPressed: provider.isLoading
+                      ? null
+                      : () async {
+                          if (!_formKey.currentState!.validate()) return;
 
-            TextField(
-              controller: passwordCtrl,
-              obscureText: true,
-              decoration: const InputDecoration(
-                labelText: 'Password',
-                border: OutlineInputBorder(),
-              ),
-            ),
+                          final ok = await provider.login(
+                            userCtrl.text.trim(),
+                            passCtrl.text.trim(),
+                          );
 
-            if (error != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                error!,
-                style: const TextStyle(color: Colors.red),
+                          if (!mounted) return;
+
+                          if (ok) {
+                            Navigator.pushReplacement(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    const ProductListScreen(),
+                              ),
+                            );
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content:
+                                    Text(provider.error ?? 'Login failed'),
+                              ),
+                            );
+                          }
+                        },
+                  child: provider.isLoading
+                      ? const CircularProgressIndicator()
+                      : const Text('Login'),
+                ),
               ),
             ],
-
-            const SizedBox(height: 24),
-
-            // 🔐 Login
-            ElevatedButton(
-              onPressed: userProvider.isLoading
-                  ? null
-                  : () {
-                      try {
-                        final user = userProvider.users.firstWhere(
-                          (u) =>
-                              u.username == usernameCtrl.text.trim() &&
-                              u.password == passwordCtrl.text.trim(),
-                        );
-
-                        authProvider.login(user);
-
-                        Navigator.pushReplacementNamed(
-                          context,
-                          '/users',
-                        );
-                      } catch (e) {
-                        setState(() {
-                          error = 'Username หรือ Password ไม่ถูกต้อง';
-                        });
-                      }
-                    },
-              child: const Padding(
-                padding: EdgeInsets.symmetric(vertical: 12),
-                child: Text('Login'),
-              ),
-            ),
-
-            const SizedBox(height: 12),
-
-            // 📝 สมัครสมาชิก
-            OutlinedButton(
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) => const UserFormScreen(),
-                  ),
-                );
-              },
-              child: const Padding(
-                padding: EdgeInsets.symmetric(vertical: 12),
-                child: Text('สมัครสมาชิก'),
-              ),
-            ),
-
-            if (userProvider.isLoading) ...[
-              const SizedBox(height: 16),
-              const Center(child: CircularProgressIndicator()),
-            ],
-          ],
+          ),
         ),
       ),
     );
