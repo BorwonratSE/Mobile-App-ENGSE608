@@ -6,42 +6,42 @@ class AuthProvider extends ChangeNotifier {
   bool isLoading = false;
   String? error;
   String? token;
+  String? username;
 
-  Future<bool> login(String username, String password) async {
+  bool get isAdmin => username == "johnd";
+
+  Future<bool> login(String user, String pass) async {
     isLoading = true;
     error = null;
     notifyListeners();
 
-    try {
-      final response = await http.post(
-        Uri.parse('https://fakestoreapi.com/auth/login'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          "username": username.trim(),
-          "password": password.trim(),
-        }),
-      );
+    final response = await http.post(
+      Uri.parse('https://fakestoreapi.com/auth/login'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        "username": user.trim(),
+        "password": pass.trim(),
+      }),
+    );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = jsonDecode(response.body);
-        token = data['token'];
-        isLoading = false;
-        notifyListeners();
-        return true;
-      } else {
-        error = "Invalid username or password";
-      }
-    } catch (e) {
-      error = e.toString();
+    if (response.statusCode == 200 || response.statusCode == 201) {
+      final data = jsonDecode(response.body);
+      token = data['token'];
+      username = user.trim(); // ⭐ เก็บ username
+      isLoading = false;
+      notifyListeners();
+      return true;
+    } else {
+      error = "Login failed";
+      isLoading = false;
+      notifyListeners();
+      return false;
     }
-
-    isLoading = false;
-    notifyListeners();
-    return false;
   }
 
   void logout() {
     token = null;
+    username = null;
     notifyListeners();
   }
 }
