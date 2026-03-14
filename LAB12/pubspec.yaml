@@ -1,0 +1,33 @@
+name: community_market_app
+description: Community Market Application
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: '^3.9.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  provider: ^6.0.5
+  sqflite: ^2.3.0
+  path: ^1.8.3
+  image_picker: ^1.0.7
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_launcher_icons: ^0.13.1
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/
+
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/logo.png"
