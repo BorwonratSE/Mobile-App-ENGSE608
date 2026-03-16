@@ -121,7 +121,7 @@ lib/
 
 ตารางที่ 2: workouts
 
-| id | activity | type | duration | calories | date | note |
+| id | activity | type | duration | calories | date |
 
 ---
 
