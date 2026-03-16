@@ -19,142 +19,114 @@ class _AddWorkoutScreenState extends State<AddWorkoutScreen> {
 
   String type = "Cardio";
 
-  @override
-  void dispose() {
-    activity.dispose();
-    duration.dispose();
-    calories.dispose();
-    super.dispose();
+  DateTime selectedDate = DateTime.now();
+
+  Future pickDate() async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: selectedDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2030),
+    );
+
+    if (date != null) {
+      setState(() {
+        selectedDate = date;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final provider = Provider.of<WorkoutProvider>(context, listen: false);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text("Add Workout"),
       ),
-
       body: Padding(
         padding: const EdgeInsets.all(20),
-
         child: Form(
           key: _formKey,
-
           child: Column(
             children: [
-
-              /// ACTIVITY
               TextFormField(
                 controller: activity,
-                decoration: const InputDecoration(
-                  labelText: "Activity",
-                  border: OutlineInputBorder(),
-                ),
+                decoration: const InputDecoration(labelText: "Activity"),
                 validator: (v) {
                   if (v == null || v.isEmpty) {
-                    return "Please enter activity";
+                    return "Enter activity";
                   }
                   return null;
                 },
               ),
-
-              const SizedBox(height: 15),
-
-              /// TYPE
+              const SizedBox(height: 10),
               DropdownButtonFormField<String>(
                 value: type,
-                decoration: const InputDecoration(
-                  labelText: "Type",
-                  border: OutlineInputBorder(),
-                ),
                 items: ["Cardio", "Strength", "Flexibility"]
-                    .map(
-                      (e) => DropdownMenuItem(
-                        value: e,
-                        child: Text(e),
-                      ),
-                    )
+                    .map((e) => DropdownMenuItem(value: e, child: Text(e)))
                     .toList(),
                 onChanged: (v) {
                   setState(() {
                     type = v!;
                   });
                 },
+                decoration: const InputDecoration(labelText: "Type"),
               ),
-
-              const SizedBox(height: 15),
-
-              /// DURATION
+              const SizedBox(height: 10),
               TextFormField(
                 controller: duration,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: "Duration (minutes)",
-                  border: OutlineInputBorder(),
-                ),
-                validator: (v) {
-                  if (v == null || v.isEmpty) {
-                    return "Enter duration";
-                  }
-                  return null;
-                },
+                decoration: const InputDecoration(labelText: "Duration"),
               ),
-
-              const SizedBox(height: 15),
-
-              /// CALORIES
+              const SizedBox(height: 10),
               TextFormField(
                 controller: calories,
                 keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: "Calories",
-                  border: OutlineInputBorder(),
-                ),
-                validator: (v) {
-                  if (v == null || v.isEmpty) {
-                    return "Enter calories";
+                decoration: const InputDecoration(labelText: "Calories"),
+              ),
+              const SizedBox(height: 20),
+
+              Row(
+                children: [
+                  Text(
+                    "Date: ${selectedDate.toLocal().toString().split(' ')[0]}",
+                  ),
+                  const SizedBox(width: 10),
+                  ElevatedButton(
+                    onPressed: pickDate,
+                    child: const Text("Select Date"),
+                  )
+                ],
+              ),
+
+              const SizedBox(height: 20),
+
+              ElevatedButton(
+                child: const Text("Save Workout"),
+                onPressed: () {
+                  if (_formKey.currentState!.validate()) {
+                    final workout = Workout(
+                      activity: activity.text,
+                      type: type,
+                      duration: int.parse(duration.text),
+                      calories: int.parse(calories.text),
+                      date: selectedDate.toString(),
+                      note: "",
+                    );
+
+                    provider.addWorkout(workout);
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("Workout saved successfully"),
+                      ),
+                    );
+
+                    Navigator.pop(context);
                   }
-                  return null;
                 },
-              ),
-
-              const SizedBox(height: 25),
-
-              /// SAVE BUTTON
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  child: const Text("Save"),
-                  onPressed: () {
-
-                    if (_formKey.currentState!.validate()) {
-
-                      Provider.of<WorkoutProvider>(
-                        context,
-                        listen: false,
-                      ).addWorkout(
-
-                        Workout(
-                          activity: activity.text,
-                          type: type,
-                          duration: int.parse(duration.text),
-                          calories: int.parse(calories.text),
-                          date: DateTime.now().toString(),
-                          note: "",
-                        ),
-                      );
-
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Workout saved"),
-                        ),
-                      );
-
-                      Navigator.pop(context);
-                    }
-                  },
-                ),
-              ),
+              )
             ],
           ),
         ),

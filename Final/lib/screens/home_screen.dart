@@ -17,6 +17,19 @@ class _HomeScreenState extends State<HomeScreen> {
 
   final TextEditingController searchController = TextEditingController();
 
+  Icon getIcon(String type) {
+    switch (type) {
+      case "Cardio":
+        return const Icon(Icons.directions_run, color: Colors.orange);
+      case "Strength":
+        return const Icon(Icons.fitness_center, color: Colors.red);
+      case "Flexibility":
+        return const Icon(Icons.self_improvement, color: Colors.green);
+      default:
+        return const Icon(Icons.sports);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
 
@@ -27,13 +40,11 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: const Text("Workout Tracker"),
         centerTitle: true,
-
+        elevation: 0,
         actions: [
-
           IconButton(
             icon: const Icon(Icons.bar_chart),
             onPressed: () {
-
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -41,98 +52,113 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               );
             },
-          ),
+          )
         ],
       ),
 
       body: Column(
-
         children: [
 
-          /// SEARCH
+          /// SEARCH BOX
           Padding(
-            padding: const EdgeInsets.all(10),
-
+            padding: const EdgeInsets.all(12),
             child: TextField(
-
               controller: searchController,
-
               decoration: InputDecoration(
-
                 hintText: "Search workout...",
-
                 prefixIcon: const Icon(Icons.search),
-
+                filled: true,
+                fillColor: Colors.grey.shade100,
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: BorderSide.none,
                 ),
               ),
-
               onChanged: (value) {
-
                 provider.search = value;
                 provider.notifyListeners();
               },
             ),
           ),
 
-          /// FILTER
+          /// FILTER + SORT
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
 
-            child: Row(
+                  const Text(
+                    "Filter:",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
 
-              children: [
+                  const SizedBox(width: 10),
 
-                const Text(
-                  "Filter:",
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
+                  DropdownButton<String>(
+                    value: provider.filterType,
+                    underline: const SizedBox(),
+                    items: ["All", "Cardio", "Strength", "Flexibility"]
+                        .map((type) {
+                      return DropdownMenuItem(
+                        value: type,
+                        child: Text(type),
+                      );
+                    }).toList(),
+                    onChanged: (value) {
+                      provider.filterType = value!;
+                      provider.notifyListeners();
+                    },
+                  ),
 
-                const SizedBox(width: 10),
+                  const Spacer(),
 
-                DropdownButton<String>(
+                  const Text(
+                    "Sort:",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
 
-                  value: provider.filterType,
+                  const SizedBox(width: 10),
 
-                  items: ["All", "Cardio", "Strength", "Flexibility"]
-                      .map((type) {
-
-                    return DropdownMenuItem(
-                      value: type,
-                      child: Text(type),
-                    );
-
-                  }).toList(),
-
-                  onChanged: (value) {
-
-                    provider.filterType = value!;
-                    provider.notifyListeners();
-                  },
-                ),
-              ],
+                  DropdownButton<String>(
+                    value: provider.sortBy,
+                    underline: const SizedBox(),
+                    items: const [
+                      DropdownMenuItem(
+                          value: "date", child: Text("Date")),
+                      DropdownMenuItem(
+                          value: "name", child: Text("Name")),
+                      DropdownMenuItem(
+                          value: "duration", child: Text("Duration")),
+                    ],
+                    onChanged: (value) {
+                      provider.sortBy = value!;
+                      provider.notifyListeners();
+                    },
+                  ),
+                ],
+              ),
             ),
           ),
 
           const SizedBox(height: 10),
 
-          /// LIST WORKOUT
+          /// WORKOUT LIST
           Expanded(
-
             child: provider.workouts.isEmpty
-
                 ? const Center(
                     child: Text(
                       "No workout data",
                       style: TextStyle(fontSize: 16),
                     ),
                   )
-
                 : ListView.builder(
-
                     itemCount: provider.workouts.length,
-
                     itemBuilder: (context, index) {
 
                       Workout workout = provider.workouts[index];
@@ -144,13 +170,14 @@ class _HomeScreenState extends State<HomeScreen> {
                         direction: DismissDirection.endToStart,
 
                         background: Container(
-
-                          color: Colors.red,
-
+                          margin: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           alignment: Alignment.centerRight,
-
                           padding: const EdgeInsets.only(right: 20),
-
                           child: const Icon(
                             Icons.delete,
                             color: Colors.white,
@@ -162,7 +189,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           provider.deleteWorkout(workout.id!);
 
                           ScaffoldMessenger.of(context).showSnackBar(
-
                             const SnackBar(
                               content: Text("Workout deleted"),
                             ),
@@ -170,20 +196,17 @@ class _HomeScreenState extends State<HomeScreen> {
                         },
 
                         child: Card(
-
-                          elevation: 3,
-
                           margin: const EdgeInsets.symmetric(
-                              horizontal: 10, vertical: 6),
-
+                              horizontal: 12, vertical: 6),
+                          elevation: 3,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(14),
                           ),
-
                           child: ListTile(
 
-                            leading: const CircleAvatar(
-                              child: Icon(Icons.fitness_center),
+                            leading: CircleAvatar(
+                              backgroundColor: Colors.grey.shade200,
+                              child: getIcon(workout.type),
                             ),
 
                             title: Text(
@@ -194,12 +217,17 @@ class _HomeScreenState extends State<HomeScreen> {
                             ),
 
                             subtitle: Text(
-                                "${workout.type} • ${workout.duration} min"),
+                              "${workout.type} • ${workout.duration} min\n${workout.date.split(" ")[0]}",
+                            ),
 
-                            trailing: const Icon(Icons.arrow_forward_ios),
+                            isThreeLine: true,
+
+                            trailing: const Icon(
+                              Icons.arrow_forward_ios,
+                              size: 16,
+                            ),
 
                             onTap: () {
-
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
@@ -218,12 +246,10 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
 
       /// ADD BUTTON
-      floatingActionButton: FloatingActionButton(
-
-        child: const Icon(Icons.add),
-
+      floatingActionButton: FloatingActionButton.extended(
+        icon: const Icon(Icons.add),
+        label: const Text("Add Workout"),
         onPressed: () {
-
           Navigator.push(
             context,
             MaterialPageRoute(

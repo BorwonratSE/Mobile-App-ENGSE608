@@ -7,9 +7,10 @@ class WorkoutProvider extends ChangeNotifier {
 
   String search = "";
   String filterType = "All";
+  String sortBy = "date";
 
   List<Workout> get workouts {
-    return _workouts.where((w) {
+    List<Workout> filtered = _workouts.where((w) {
       final matchSearch =
           w.activity.toLowerCase().contains(search.toLowerCase());
 
@@ -17,6 +18,17 @@ class WorkoutProvider extends ChangeNotifier {
 
       return matchSearch && matchType;
     }).toList();
+
+    // SORTING
+    if (sortBy == "name") {
+      filtered.sort((a, b) => a.activity.compareTo(b.activity));
+    } else if (sortBy == "duration") {
+      filtered.sort((a, b) => b.duration.compareTo(a.duration));
+    } else if (sortBy == "date") {
+      filtered.sort((a, b) => b.date.compareTo(a.date));
+    }
+
+    return filtered;
   }
 
   Future loadWorkouts() async {
