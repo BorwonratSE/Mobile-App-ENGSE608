@@ -3,57 +3,72 @@ import 'package:path/path.dart';
 import '../models/workout.dart';
 
 class DatabaseService {
-  static final DatabaseService instance = DatabaseService._init();
-  static Database? _database;
 
+  static final DatabaseService instance = DatabaseService._init();
   DatabaseService._init();
+
+  static Database? _database;
 
   Future<Database> get database async {
     if (_database != null) return _database!;
-    _database = await _initDB('workout.db');
+    _database = await _initDB();
     return _database!;
   }
 
-  Future<Database> _initDB(String filePath) async {
-    final dbPath = await getDatabasesPath();
-    final path = join(dbPath, filePath);
+  Future<Database> _initDB() async {
+    final path = join(await getDatabasesPath(), 'workout.db');
 
-    return openDatabase(
+    return await openDatabase(
       path,
       version: 1,
       onCreate: _createDB,
     );
   }
 
-  Future _createDB(Database db, int version) async {
+  Future<void> _createDB(Database db, int version) async {
+
+    // ===== ตารางประเภท =====
     await db.execute('''
-CREATE TABLE workouts(
-id INTEGER PRIMARY KEY AUTOINCREMENT,
-activity TEXT,
-type TEXT,
-duration INTEGER,
-calories INTEGER,
-date TEXT,
-note TEXT
+CREATE TABLE workout_types(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL
 )
 ''');
-  }
 
-  Future insertWorkout(Workout workout) async {
-    final db = await instance.database;
-    return await db.insert('workouts', workout.toMap());
+    // ===== ตารางกิจกรรม =====
+    await db.execute('''
+CREATE TABLE workouts(
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  activity TEXT,
+  type TEXT,
+  duration INTEGER,
+  calories INTEGER,
+  date TEXT,
+  note TEXT
+)
+''');
+
+    // ===== เพิ่มประเภทเริ่มต้น =====
+    await db.insert('workout_types', {'name': 'Cardio'});
+    await db.insert('workout_types', {'name': 'Strength'});
+    await db.insert('workout_types', {'name': 'Flexibility'});
   }
 
   Future<List<Workout>> getWorkouts() async {
-    final db = await instance.database;
+    final db = await database;
     final result = await db.query('workouts');
     return result.map((e) => Workout.fromMap(e)).toList();
   }
 
-  Future<int> updateWorkout(Workout workout) async {
-    final db = await instance.database;
+  Future insertWorkout(Workout workout) async {
+    final db = await database;
+    await db.insert('workouts', workout.toMap());
+  }
 
-    return await db.update(
+  Future updateWorkout(Workout workout) async {
+    final db = await database;
+
+    await db.update(
       'workouts',
       workout.toMap(),
       where: 'id=?',
@@ -62,9 +77,9 @@ note TEXT
   }
 
   Future deleteWorkout(int id) async {
-    final db = await instance.database;
+    final db = await database;
 
-    return await db.delete(
+    await db.delete(
       'workouts',
       where: 'id=?',
       whereArgs: [id],
